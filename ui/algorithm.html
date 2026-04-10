@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Piper — Algorithm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Manrope:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .algo-back { display:block; font-size:12px; color:var(--sb-muted); text-decoration:none; padding:6px 0; transition:color .12s; }
+    .algo-back:hover { color:var(--sb-ink); }
+
+    .config-rows { display:grid; gap:0; margin-top:6px; }
+    .config-row {
+      display:flex; justify-content:space-between; align-items:baseline;
+      padding:6px 0; border-bottom:1px solid var(--sb-border);
+      font-family:'Fira Code',monospace; font-size:11px; color:var(--sb-ink);
+    }
+    .config-row:last-child { border-bottom:none; }
+    .config-row span:first-child { color:var(--sb-muted); font-size:10px; text-transform:uppercase; letter-spacing:.07em; }
+
+    /* Sim preset tabs (inside content) */
+    .sim-tabs { display:flex; gap:6px; margin-bottom:16px; }
+    .sim-tab {
+      padding:7px 20px; border:1px solid var(--line); border-radius:4px;
+      background:transparent; color:var(--muted);
+      font:600 12px/1 'Manrope',sans-serif; cursor:pointer; transition:all .12s;
+    }
+    .sim-tab:hover:not(.active) { border-color:var(--muted); color:var(--ink); }
+    .sim-tab.active { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+
+    /* Zone chart */
+    .zone-grid { display:grid; gap:20px; }
+    .zone-preset-label {
+      font-family:'Fira Code',monospace; font-size:11px; font-weight:500;
+      color:var(--muted); margin:0 0 8px; text-transform:uppercase; letter-spacing:.08em;
+    }
+    .zone-legend {
+      display:flex; gap:16px; margin-top:12px; flex-wrap:wrap;
+    }
+    .zone-legend-item { display:flex; align-items:center; gap:6px; font-size:11px; font-family:'Fira Code',monospace; color:var(--muted); }
+    .zone-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+
+    /* Decay curve */
+    .decay-chart-wrap { overflow-x:auto; }
+
+    /* Context bar */
+    .sim-bar-status {
+      display:flex; align-items:center; gap:12px; margin-top:6px;
+      font-family:'Fira Code',monospace; font-size:12px; color:var(--muted);
+    }
+    .s-safe { color:var(--accent); font-weight:600; }
+    .s-growing { color:#fbbf24; font-weight:600; }
+    .s-active { color:#f97316; font-weight:600; }
+    .s-emergency { color:var(--danger); font-weight:600; }
+
+    /* Stats row */
+    .sim-stats {
+      display:flex; gap:0; border:1px solid var(--line); border-radius:6px;
+      overflow:hidden; margin:12px 0 14px; background:var(--panel);
+    }
+    .stat-item {
+      flex:1; display:flex; flex-direction:column; gap:3px;
+      padding:10px 14px; border-right:1px solid var(--line);
+    }
+    .stat-item:last-child { border-right:none; }
+    .stat-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+    .stat-val { font-family:'Fira Code',monospace; font-size:16px; font-weight:500; color:var(--ink); }
+    .stat-val.good { color:var(--accent); }
+    .stat-val.warn { color:#f97316; }
+
+    /* Controls */
+    .sim-controls { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+    .sim-btn {
+      padding:8px 16px; border:1px solid var(--line); border-radius:4px;
+      background:var(--panel); color:var(--ink);
+      font:500 13px/1 'Manrope',sans-serif; cursor:pointer; transition:all .12s;
+    }
+    .sim-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+    .sim-btn.primary { background:var(--accent); border-color:var(--accent); color:#000; font-weight:600; }
+    .sim-btn.primary:hover { filter:brightness(1.1); color:#000; }
+    .sim-btn.reset { color:var(--danger); border-color:var(--danger-soft); }
+    .sim-btn.reset:hover { background:var(--danger-soft); border-color:var(--danger); }
+
+    /* Message list */
+    .sim-msgs-wrap { border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+    .msg-list-head {
+      display:grid; grid-template-columns:100px 140px 1fr 160px;
+      padding:7px 12px; background:var(--paper);
+      border-bottom:1px solid var(--line);
+      font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    }
+    .sim-msgs { max-height:500px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+    .msg-row {
+      display:grid; grid-template-columns:100px 140px 1fr 160px;
+      padding:6px 12px; border-bottom:1px solid var(--line); align-items:center; font-size:12px;
+    }
+    .msg-row:last-child { border-bottom:none; }
+    .msg-row.pinned   { background:rgba(100,100,100,.04); }
+    .msg-row.shielded { background:rgba(0,200,5,.04); }
+    .msg-row.decayed  { background:rgba(245,158,11,.04); }
+
+    .msg-meta { display:flex; align-items:center; gap:5px; }
+    .msg-role {
+      font-family:'Fira Code',monospace; font-size:9px; font-weight:600;
+      padding:2px 5px; border-radius:2px; text-transform:uppercase; letter-spacing:.06em;
+    }
+    .msg-role.system    { background:rgba(107,114,128,.15); color:#6b7280; }
+    .msg-role.user      { background:rgba(77,159,255,.12);  color:#4d9fff; }
+    .msg-role.assistant { background:rgba(0,200,5,.12);     color:#00C805; }
+    .msg-role.tool      { background:rgba(168,85,247,.12);  color:#a855f7; }
+    .msg-turn { font-family:'Fira Code',monospace; font-size:10px; color:var(--muted); }
+
+    .msg-toks { font-family:'Fira Code',monospace; font-size:12px; color:var(--ink); display:flex; align-items:center; gap:4px; }
+    .tok-orig { color:var(--muted); }
+    .tok-curr-reduced { color:#f59e0b; }
+
+    .kind-pill {
+      font-family:'Fira Code',monospace; font-size:10px; font-weight:600;
+      padding:2px 6px; border-radius:2px; text-transform:uppercase; letter-spacing:.05em;
+    }
+    .kind-pill.pinned   { background:rgba(107,114,128,.12); color:#9ca3af; }
+    .kind-pill.raw      { background:rgba(0,200,5,.1);      color:#00C805; }
+    .kind-pill.shielded { background:rgba(0,200,5,.15);     color:#22c55e; border:1px solid rgba(0,200,5,.2); }
+    .kind-pill.decayed  { background:rgba(245,158,11,.12);  color:#f59e0b; }
+
+    .ret-wrap { display:flex; align-items:center; gap:6px; }
+    .ret-bar  { width:60px; height:4px; background:var(--line); border-radius:2px; overflow:hidden; }
+    .ret-fill { height:100%; background:#f59e0b; border-radius:2px; }
+    .ret-pct  { font-family:'Fira Code',monospace; font-size:10px; color:#f59e0b; min-width:28px; }
+    .ret-100  { font-family:'Fira Code',monospace; font-size:10px; color:var(--muted); }
+
+    .msg-hidden-notice {
+      padding:10px 12px; text-align:center;
+      font-family:'Fira Code',monospace; font-size:11px; color:var(--muted);
+      background:rgba(100,100,100,.04); border-bottom:1px solid var(--line);
+    }
+    .msg-empty { padding:36px; text-align:center; color:var(--muted); font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <p class="eyebrow">Piper</p>
+        <h1>Algorithm Visualizer</h1>
+        <p class="muted">Message decay + phase archival</p>
+      </div>
+
+      <div class="section">
+        <p class="label">Active Config</p>
+        <div class="config-rows" id="config-display"></div>
+      </div>
+
+      <div class="section" style="margin-top:auto; padding-top:24px;">
+        <a href="/" class="algo-back">← Benchmark Results</a>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="hero">
+        <div>
+          <p class="status-pill good">Visualizer</p>
+          <h2>Compression Algorithm</h2>
+          <p class="muted" style="font-family:'Fira Code',monospace;font-size:13px">Fibonacci decay · phase archival · threshold gating</p>
+        </div>
+      </section>
+
+      <!-- Budget Zones -->
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Context Budget Zones</h3>
+        </div>
+        <div class="zone-grid" id="budget-zones"></div>
+        <div class="zone-legend">
+          <div class="zone-legend-item"><div class="zone-dot" style="background:rgba(0,200,5,.45)"></div>Safe — below decay target</div>
+          <div class="zone-legend-item"><div class="zone-dot" style="background:rgba(251,191,36,.6)"></div>Growth — target → warm-start (no decay yet)</div>
+          <div class="zone-legend-item"><div class="zone-dot" style="background:rgba(249,115,22,.6)"></div>Decay active — warm-start → emergency</div>
+          <div class="zone-legend-item"><div class="zone-dot" style="background:rgba(239,68,68,.6)"></div>Emergency — tighter target applied</div>
+          <div class="zone-legend-item"><div class="zone-dot" style="background:rgba(0,200,5,.7)"></div>Recent window — always protected from decay</div>
+        </div>
+      </section>
+
+      <!-- Decay Curve -->
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Fibonacci Decay Curve</h3>
+          <p class="muted">Retention ratio applied to messages by age (turns from latest)</p>
+        </div>
+        <div class="decay-chart-wrap" id="decay-curve"></div>
+      </section>
+
+      <!-- Simulation -->
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Live Simulation</h3>
+        </div>
+
+        <div class="sim-tabs" id="sim-tabs">
+          <button class="sim-tab active" data-preset="1M">1M Context</button>
+          <button class="sim-tab" data-preset="400K">400K Context</button>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <div id="sim-bar"></div>
+          <div class="sim-bar-status" id="sim-status"></div>
+        </div>
+
+        <div class="sim-stats" id="sim-stats"></div>
+
+        <div class="sim-controls">
+          <button class="sim-btn primary" id="btn-add1">+ Add Turn</button>
+          <button class="sim-btn" id="btn-add10">+ Add 10 Turns</button>
+          <button class="sim-btn" id="btn-warm">→ Fill to Warm-start (85%)</button>
+          <button class="sim-btn" id="btn-emerg">→ Fill to Emergency (94%)</button>
+          <button class="sim-btn reset" id="btn-reset">↺ Reset</button>
+        </div>
+
+        <div class="sim-msgs-wrap">
+          <div class="msg-list-head">
+            <div>Role / Turn</div>
+            <div>Tokens</div>
+            <div>State</div>
+            <div>Retention</div>
+          </div>
+          <div class="sim-msgs" id="sim-messages"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+// ── CONFIG ───────────────────────────────────────────────────────────────────
+
+const PRESETS = {
+  '1M': {
+    name: '1,000,000 tokens',
+    maxContextTokens:    1_000_000,
+    decayWarmStartTokens: 850_000,
+    decayTargetTokens:    700_000,
+    decayEmergencyTokens: 940_000,
+    recentRawWindowTokens:600_000,
+  },
+  '400K': {
+    name: '400,000 tokens',
+    maxContextTokens:    400_000,
+    decayWarmStartTokens:340_000,
+    decayTargetTokens:   280_000,
+    decayEmergencyTokens:376_000,
+    recentRawWindowTokens:240_000,
+  }
+};
+
+const BUCKETS       = [1, 2, 3, 5, 8, 13];
+const RATIOS        = [1.0, 0.72, 0.55, 0.40, 0.28, 0.18, 0.12];
+const BUCKET_LABELS = ['≤1', '≤2', '≤3', '≤5', '≤8', '≤13', '>13'];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+
+let simPreset = '1M';
+let msgs      = [];
+let turnCount = 0;
+let seed      = 42;
+
+function rng() {
+  seed = (Math.imul(1664525, seed) + 1013904223) | 0;
+  return (seed >>> 0) / 0x100000000;
+}
+function ri(lo, hi) { return Math.floor(lo + rng() * (hi - lo)); }
+function cfg() { return PRESETS[simPreset]; }
+
+// ── ALGORITHM ────────────────────────────────────────────────────────────────
+
+function getRatio(age) {
+  const bi = BUCKETS.findIndex(b => age <= b);
+  return RATIOS[bi === -1 ? RATIOS.length - 1 : bi];
+}
+
+function computeDecay(messages) {
+  const config    = cfg();
+  const origTotal = messages.reduce((s, m) => s + m.tokens, 0);
+  const isActive  = origTotal > config.decayWarmStartTokens;
+  const isEmerg   = origTotal > config.decayEmergencyTokens;
+  const effTarget = isEmerg ? Math.floor(config.decayTargetTokens * 0.94) : config.decayTargetTokens;
+
+  let budget = config.recentRawWindowTokens;
+  const shielded = new Set();
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === 'system') { shielded.add(i); continue; }
+    if (budget > 0) { shielded.add(i); budget -= messages[i].tokens; }
+  }
+
+  const last = messages.length - 1;
+  let currentTotal = 0;
+
+  return messages.map((m, i) => {
+    if (m.role === 'system') {
+      currentTotal += m.tokens;
+      return { ...m, kind: 'pinned', ct: m.tokens, ratio: 1 };
+    }
+    if (!isActive || shielded.has(i)) {
+      currentTotal += m.tokens;
+      return { ...m, kind: isActive && shielded.has(i) ? 'shielded' : 'raw', ct: m.tokens, ratio: 1 };
+    }
+    const age   = last - i;
+    const ratio = getRatio(age);
+    if (ratio >= 0.99) { currentTotal += m.tokens; return { ...m, kind: 'raw', ct: m.tokens, ratio: 1 }; }
+    const ct = Math.max(10, Math.floor(m.tokens * ratio));
+    currentTotal += ct;
+    // Early-exit: if we've already hit target, keep remaining items raw
+    if (currentTotal <= effTarget) { /* continue decaying older */ }
+    return { ...m, kind: 'decayed', ct, ratio };
+  });
+}
+
+// ── ACTIONS ──────────────────────────────────────────────────────────────────
+
+function addTurns(n, silent) {
+  for (let i = 0; i < n; i++) {
+    turnCount++;
+    msgs.push({ role: 'user',      tokens: ri(120, 400),  turn: turnCount });
+    msgs.push({ role: 'assistant', tokens: ri(400, 2500), turn: turnCount });
+    if (rng() > 0.35) msgs.push({ role: 'tool', tokens: ri(150, 3500), turn: turnCount });
+  }
+  if (!silent) render();
+}
+
+function fillTo(pct) {
+  const target = Math.floor(cfg().maxContextTokens * pct);
+  while (msgs.reduce((s, m) => s + m.tokens, 0) < target) addTurns(1, true);
+  render();
+}
+
+function resetSim() {
+  seed = 42; msgs = []; turnCount = 0;
+  msgs.push({ role: 'system', tokens: ri(2000, 4000), turn: 0 });
+  render();
+}
+
+// ── FORMATTING ───────────────────────────────────────────────────────────────
+
+function fmtK(n) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
+  if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
+  return String(n);
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+
+function render() {
+  const config   = cfg();
+  const computed = computeDecay(msgs);
+  renderBar(computed, config);
+  renderStats(computed);
+  renderMessages(computed);
+  renderConfigSidebar(config);
+}
+
+function renderBar(computed, config) {
+  const W = 1000, H = 52;
+  const max = config.maxContextTokens;
+  const origTotal = msgs.reduce((s, m) => s + m.tokens, 0);
+  const currTotal = computed.reduce((s, m) => s + m.ct, 0);
+
+  let segs = '';
+  let x = 0;
+  for (const m of computed) {
+    const w = Math.max(0.5, m.ct / max * W);
+    const f = m.kind === 'pinned'   ? '#333333'
+            : m.kind === 'decayed'  ? '#d97706'
+            : m.kind === 'shielded' ? '#00C805'
+            : '#007a00';
+    segs += `<rect x="${x.toFixed(1)}" y="0" width="${w.toFixed(1)}" height="${H}" fill="${f}"/>`;
+    x += w;
+  }
+
+  const thresholds = [
+    { v: config.decayTargetTokens,     c: '#00C805', l: `Target ${(config.decayTargetTokens/max*100|0)}%`     },
+    { v: config.decayWarmStartTokens,  c: '#f59e0b', l: `Warm-start ${(config.decayWarmStartTokens/max*100|0)}%` },
+    { v: config.decayEmergencyTokens,  c: '#ef4444', l: `Emergency ${(config.decayEmergencyTokens/max*100|0)}%`  },
+  ];
+
+  let lines = '';
+  for (const t of thresholds) {
+    const tx = t.v / max * W;
+    lines += `<line x1="${tx.toFixed(1)}" y1="0" x2="${tx.toFixed(1)}" y2="${H}" stroke="${t.c}" stroke-width="1.5" stroke-dasharray="4,3" opacity=".9"/>
+    <text x="${(tx+3).toFixed(1)}" y="${H+16}" fill="${t.c}" font-size="10" font-family="'Fira Code',monospace">${t.l}</text>`;
+  }
+
+  const svg = `<svg viewBox="0 0 ${W} ${H+22}" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="${W}" height="${H}" fill="#0c0c0c" rx="3"/>
+    ${segs}${lines}
+    <rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#1e1e1e" stroke-width="1" rx="3"/>
+  </svg>`;
+
+  const isEmerg = origTotal > config.decayEmergencyTokens;
+  const isActive= origTotal > config.decayWarmStartTokens;
+  const isGrow  = origTotal > config.decayTargetTokens;
+  const [label, cls] = isEmerg  ? ['EMERGENCY',   's-emergency']
+                     : isActive ? ['DECAY ACTIVE', 's-active']
+                     : isGrow   ? ['GROWING',      's-growing']
+                     :            ['SAFE',          's-safe'];
+
+  const saved = origTotal - currTotal;
+  document.getElementById('sim-bar').innerHTML = svg;
+  document.getElementById('sim-status').innerHTML =
+    `<span>${fmtK(currTotal)} / ${fmtK(max)}</span>
+     <span class="${cls}">${label}</span>
+     ${saved > 0 ? `<span class="muted">— ${fmtK(saved)} saved by decay</span>` : ''}`;
+}
+
+function renderStats(computed) {
+  const decayed  = computed.filter(m => m.kind === 'decayed');
+  const shielded = computed.filter(m => m.kind === 'shielded');
+  const saved    = computed.reduce((s, m) => s + m.tokens - m.ct, 0);
+  const avgRet   = decayed.length === 0 ? '—'
+    : (decayed.reduce((s, m) => s + m.ratio, 0) / decayed.length * 100).toFixed(0) + '%';
+
+  document.getElementById('sim-stats').innerHTML = `
+    <div class="stat-item"><span class="stat-label">Turns</span><span class="stat-val">${turnCount}</span></div>
+    <div class="stat-item"><span class="stat-label">Messages</span><span class="stat-val">${msgs.length}</span></div>
+    <div class="stat-item"><span class="stat-label">Decayed</span><span class="stat-val ${decayed.length > 0 ? 'warn' : ''}">${decayed.length}</span></div>
+    <div class="stat-item"><span class="stat-label">Protected</span><span class="stat-val good">${shielded.length}</span></div>
+    <div class="stat-item"><span class="stat-label">Avg Retention</span><span class="stat-val">${avgRet}</span></div>
+    <div class="stat-item"><span class="stat-label">Tokens Saved</span><span class="stat-val good">${fmtK(saved)}</span></div>
+  `;
+}
+
+function renderMessages(computed) {
+  const rows = [...computed].reverse();
+  const MAX  = 60;
+  const show = rows.slice(0, MAX);
+  const hidden = rows.length - show.length;
+  let html = '';
+
+  if (rows.length === 0) {
+    document.getElementById('sim-messages').innerHTML =
+      '<div class="msg-empty">No messages yet — click "+ Add Turn" to begin.</div>';
+    return;
+  }
+
+  if (hidden > 0) {
+    html += `<div class="msg-hidden-notice">${hidden} older messages not shown (fully decayed at ~12% retention)</div>`;
+  }
+
+  for (const m of show) {
+    const kindLabel =
+      m.kind === 'pinned'   ? 'PINNED'   :
+      m.kind === 'shielded' ? 'SHIELDED' :
+      m.kind === 'decayed'  ? 'DECAYED'  : 'RAW';
+
+    const retHtml = m.kind === 'decayed'
+      ? `<div class="ret-wrap">
+           <div class="ret-bar"><div class="ret-fill" style="width:${(m.ratio*100).toFixed(0)}%"></div></div>
+           <span class="ret-pct">${(m.ratio*100).toFixed(0)}%</span>
+         </div>`
+      : `<span class="ret-100">${m.kind === 'pinned' ? 'pinned' : '100%'}</span>`;
+
+    const tokHtml = m.tokens !== m.ct
+      ? `<span class="tok-orig">${fmtK(m.tokens)}</span><span style="color:var(--muted)"> → </span><span class="tok-curr-reduced">${fmtK(m.ct)}</span>`
+      : `<span>${fmtK(m.tokens)}</span>`;
+
+    html += `<div class="msg-row ${m.kind}">
+      <div class="msg-meta">
+        <span class="msg-role ${m.role}">${m.role.slice(0,3).toUpperCase()}</span>
+        <span class="msg-turn">T${m.turn}</span>
+      </div>
+      <div class="msg-toks">${tokHtml}</div>
+      <div><span class="kind-pill ${m.kind}">${kindLabel}</span></div>
+      <div>${retHtml}</div>
+    </div>`;
+  }
+
+  document.getElementById('sim-messages').innerHTML = html;
+}
+
+function renderConfigSidebar(config) {
+  const max = config.maxContextTokens;
+  const rows = [
+    ['Max context',    fmtK(max)],
+    ['Warm-start',     `${fmtK(config.decayWarmStartTokens)} (${(config.decayWarmStartTokens/max*100|0)}%)`],
+    ['Decay target',   `${fmtK(config.decayTargetTokens)} (${(config.decayTargetTokens/max*100|0)}%)`],
+    ['Emergency',      `${fmtK(config.decayEmergencyTokens)} (${(config.decayEmergencyTokens/max*100|0)}%)`],
+    ['Recent window',  `${fmtK(config.recentRawWindowTokens)} (${(config.recentRawWindowTokens/max*100|0)}%)`],
+  ];
+  document.getElementById('config-display').innerHTML =
+    rows.map(([k, v]) => `<div class="config-row"><span>${k}</span><span>${v}</span></div>`).join('');
+}
+
+// ── STATIC CHARTS ────────────────────────────────────────────────────────────
+
+function buildZoneSVG(config) {
+  const W = 1000, BH = 44, TOTAL = BH + 48;
+  const max = config.maxContextTokens;
+  const toX = v => v / max * W;
+
+  const tgt  = toX(config.decayTargetTokens);
+  const warm = toX(config.decayWarmStartTokens);
+  const emrg = toX(config.decayEmergencyTokens);
+  const rwin = W - toX(config.recentRawWindowTokens);
+
+  const zones = [
+    [0,    tgt,      'rgba(0,200,5,.28)'],
+    [tgt,  warm-tgt, 'rgba(251,191,36,.32)'],
+    [warm, emrg-warm,'rgba(249,115,22,.35)'],
+    [emrg, W-emrg,   'rgba(239,68,68,.38)'],
+  ].map(([x, w, f]) => `<rect x="${x.toFixed(1)}" y="0" width="${w.toFixed(1)}" height="${BH}" fill="${f}"/>`).join('');
+
+  const lines = [
+    [tgt,  '#00C805', fmtK(config.decayTargetTokens)],
+    [warm, '#f59e0b', fmtK(config.decayWarmStartTokens)],
+    [emrg, '#ef4444', fmtK(config.decayEmergencyTokens)],
+  ].map(([x, c, l]) =>
+    `<line x1="${x.toFixed(1)}" y1="0" x2="${x.toFixed(1)}" y2="${BH}" stroke="${c}" stroke-width="1.5" stroke-dasharray="4,3"/>
+     <text x="${(x+3).toFixed(1)}" y="${BH+14}" fill="${c}" font-size="11" font-family="'Fira Code',monospace">${l}</text>`
+  ).join('');
+
+  const rwinBar =
+    `<rect x="${rwin.toFixed(1)}" y="${BH+20}" width="${(W-rwin).toFixed(1)}" height="5" fill="rgba(0,200,5,.3)" rx="2"/>
+     <line x1="${rwin.toFixed(1)}" y1="${BH+18}" x2="${rwin.toFixed(1)}" y2="${BH+27}" stroke="#00C805" stroke-width="1" opacity=".6"/>
+     <text x="${(rwin+4).toFixed(1)}" y="${BH+38}" fill="#00C805" font-size="10" font-family="'Fira Code',monospace">recent window → ${fmtK(config.recentRawWindowTokens)} protected</text>`;
+
+  return `<svg viewBox="0 0 ${W} ${TOTAL}" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="${W}" height="${BH}" fill="#111" rx="2"/>
+    ${zones}${lines}${rwinBar}
+    <rect x="0" y="0" width="${W}" height="${BH}" fill="none" stroke="#222" stroke-width="1" rx="2"/>
+  </svg>`;
+}
+
+function buildDecaySVG() {
+  const W = 680, H = 200, PL = 48, PB = 38, PT = 20, PR = 20;
+  const CW = W - PL - PR, CH = H - PB - PT;
+  const bw = (CW / RATIOS.length) * 0.65;
+  const gap= (CW / RATIOS.length) * 0.35;
+
+  function barColor(r) {
+    const t = 1 - r;
+    return `rgb(${Math.round(t*239)},${Math.round(200-t*132)},${Math.round(5+t*68)})`;
+  }
+
+  let bars = '', xlabels = '', ylines = '';
+
+  for (let i = 0; i < RATIOS.length; i++) {
+    const ratio = RATIOS[i];
+    const x = PL + i * (CW / RATIOS.length) + gap / 2;
+    const bh = CH * ratio;
+    const y  = PT + CH - bh;
+    const c  = barColor(ratio);
+    bars    += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${c}" rx="2"/>
+                <text x="${(x+bw/2).toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle" fill="${c}" font-size="11" font-family="'Fira Code',monospace">${(ratio*100).toFixed(0)}%</text>`;
+    xlabels += `<text x="${(x+bw/2).toFixed(1)}" y="${(PT+CH+16).toFixed(1)}" text-anchor="middle" fill="#888" font-size="10" font-family="'Fira Code',monospace">${BUCKET_LABELS[i]}</text>`;
+  }
+
+  for (let p = 0; p <= 100; p += 25) {
+    const y = PT + CH * (1 - p / 100);
+    ylines += `<line x1="${PL-3}" y1="${y.toFixed(1)}" x2="${PL+CW}" y2="${y.toFixed(1)}" stroke="#222" stroke-width="1"/>
+               <text x="${(PL-6).toFixed(1)}" y="${(y+3).toFixed(1)}" text-anchor="end" fill="#888" font-size="10" font-family="'Fira Code',monospace">${p}%</text>`;
+  }
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:700px" xmlns="http://www.w3.org/2000/svg">
+    <rect x="${PL}" y="${PT}" width="${CW}" height="${CH}" fill="#080808"/>
+    ${ylines}${bars}${xlabels}
+    <line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+CH}" stroke="#333" stroke-width="1"/>
+    <line x1="${PL}" y1="${PT+CH}" x2="${PL+CW}" y2="${PT+CH}" stroke="#333" stroke-width="1"/>
+    <text x="${W/2}" y="${H-2}" text-anchor="middle" fill="#777" font-size="11" font-family="'Manrope',sans-serif">Age (turns from latest message)</text>
+  </svg>`;
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+
+document.getElementById('budget-zones').innerHTML = `
+  <div>
+    <p class="zone-preset-label">1M Context — 1,000,000 tokens</p>
+    ${buildZoneSVG(PRESETS['1M'])}
+  </div>
+  <div>
+    <p class="zone-preset-label">400K Context — 400,000 tokens</p>
+    ${buildZoneSVG(PRESETS['400K'])}
+  </div>
+`;
+
+document.getElementById('decay-curve').innerHTML = buildDecaySVG();
+
+document.querySelectorAll('.sim-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    simPreset = btn.dataset.preset;
+    document.querySelectorAll('.sim-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    resetSim();
+  });
+});
+
+document.getElementById('btn-add1').addEventListener('click',  () => addTurns(1));
+document.getElementById('btn-add10').addEventListener('click', () => addTurns(10));
+document.getElementById('btn-warm').addEventListener('click',  () => { resetSim(); fillTo(0.87); });
+document.getElementById('btn-emerg').addEventListener('click', () => { resetSim(); fillTo(0.96); });
+document.getElementById('btn-reset').addEventListener('click', resetSim);
+
+resetSim();
+</script>
+</body>
+</html>

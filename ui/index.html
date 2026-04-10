@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Piper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Manrope:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">Piper</p>
+          <h1>Compression Benchmarks</h1>
+        </div>
+        <div class="section">
+          <label class="label" for="benchmark-select">Primary benchmark</label>
+          <select id="benchmark-select"></select>
+        </div>
+        <div class="section">
+          <p class="label">Available runs</p>
+          <div id="benchmark-list" class="benchmark-list"></div>
+        </div>
+        <div class="section" style="margin-top:auto;padding-top:24px;">
+          <a href="/algorithm.html" style="display:block;font-size:11px;font-family:'Fira Code',monospace;color:var(--sb-muted);text-decoration:none;padding:6px 0;transition:color .12s" onmouseover="this.style.color='var(--sb-ink)'" onmouseout="this.style.color='var(--sb-muted)'">Algorithm Visualizer →</a>
+        </div>
+      </aside>
+
+      <main class="content">
+        <section class="hero">
+          <div>
+            <p id="status-pill" class="status-pill">Loading</p>
+            <h2 id="benchmark-title">Loading benchmark…</h2>
+            <p id="benchmark-subtitle" class="muted"></p>
+          </div>
+          <div class="summary-actions">
+            <button id="refresh-button" class="button">Refresh</button>
+          </div>
+        </section>
+
+        <section class="card-grid" id="overview-cards"></section>
+
+        <section class="panel" id="live-progress-panel" hidden>
+          <div class="panel-header">
+            <h3>Live Progress</h3>
+            <p class="muted" id="live-progress-label"></p>
+          </div>
+          <div id="live-progress-summary" class="live-progress-summary"></div>
+          <div class="table-wrap">
+            <table id="live-task-table">
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Completed variants</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h3>Benchmark Comparison</h3>
+          </div>
+          <div class="table-wrap">
+            <table id="comparison-table">
+              <thead>
+                <tr>
+                  <th>Benchmark</th>
+                  <th>Status</th>
+                  <th>Pairs</th>
+                  <th>Success</th>
+                  <th>Main token change</th>
+                  <th>Peak change</th>
+                  <th>Main cost</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h3>Scenario Breakdown</h3>
+          </div>
+          <div class="table-wrap">
+            <table id="scenario-table">
+              <thead>
+                <tr>
+                  <th>Scenario</th>
+                  <th>Pairs</th>
+                  <th>Success (base → comp)</th>
+                  <th>Δ Main tokens</th>
+                  <th>Δ Peak</th>
+                  <th>Cost (base → comp)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h3>Per-Task Results</h3>
+          </div>
+          <div class="table-wrap">
+            <table id="task-table">
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Scenario</th>
+                  <th>Baseline</th>
+                  <th>Compressed</th>
+                  <th>Main token change</th>
+                  <th>Peak change</th>
+                  <th>Main cost change</th>
+                  <th>Compression stats</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="run-explorer-panel" hidden>
+          <div class="panel-header">
+            <h3>Run Explorer</h3>
+            <p class="muted" id="run-explorer-label"></p>
+          </div>
+          <div id="run-explorer-content"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+  </html>

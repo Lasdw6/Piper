@@ -1,0 +1,49 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies & build
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+ENV/
+.eggs/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Benchmark / run outputs
+artifacts/
+
+# Local SWE-bench checkouts (large; regenerate with prepare scripts)
+workspaces/
+
+# Logs & caches
+*.log
+npm-debug.log*
+.cache/
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors (keep shared VS Code settings if you add them; un-ignore as needed)
+.idea/
+*.swp
+*.swo
+*~

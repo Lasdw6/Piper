@@ -1,0 +1,41 @@
+{
+  "name": "piper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Context compression algorithm (TS + mini-swe-agent bridge) and SWE-bench evaluation harness",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare:apps:long": "python scripts/prepare_apps.py --output data/apps-long.tasks.jsonl --limit 8 --min-question-length 1800 --min-tests 10",
+    "bench:apps:search": "tsx src/harness/apps-baseline-search.ts --tasks data/apps-long.tasks.jsonl --out artifacts/apps-baseline-search",
+    "bench:apps:pair": "tsx src/harness/benchmark-cli.ts run --tasks artifacts/apps-baseline-search/selected.tasks.jsonl --agent command --cmd npx --cmd-arg tsx --cmd-arg src/apps-agent.ts --model gpt-5.4-mini --summarizer-model gpt-4.1-mini --max-context-tokens 3500 --out artifacts/apps-long-pair",
+    "bench:demo": "tsx src/harness/benchmark-cli.ts run --tasks data/sample-benchmark-tasks.jsonl --agent mock --out artifacts/benchmark-demo",
+    "bench:mini:dev1": "tsx src/harness/benchmark-cli.ts run --tasks data/swebench-lite-dev1.tasks.jsonl --agent mini-swe-agent --python python --max-context-tokens 6000 --out artifacts/mini-swebench-dev1",
+    "bench:mini:dev1:verify": "powershell -ExecutionPolicy Bypass -File scripts/verify-mini-swebench-dev1.ps1",
+    "bench:mini:local3": "powershell -ExecutionPolicy Bypass -File scripts/run-mini-swebench-local3.ps1",
+    "bench:mini:stock:local3": "powershell -ExecutionPolicy Bypass -File scripts/run-stock-mini-local3.ps1",
+    "bench:mini:local3:verify": "powershell -ExecutionPolicy Bypass -File scripts/verify-mini-swebench-local3.ps1",
+    "bench:mini:local6": "powershell -ExecutionPolicy Bypass -File scripts/run-mini-swebench-local6.ps1",
+    "bench:mini:local6:verify": "powershell -ExecutionPolicy Bypass -File scripts/verify-mini-swebench-local6.ps1",
+    "bench:mini:dev4": "tsx src/harness/benchmark-cli.ts run --tasks data/swebench-lite-dev4.tasks.jsonl --agent mini-swe-agent --python python --out artifacts/mini-swebench-dev4",
+    "bench:mini:dev4:docker": "tsx src/harness/benchmark-cli.ts run --tasks data/swebench-lite-dev4-docker.tasks.jsonl --agent mini-swe-agent --python python --out artifacts/mini-swebench-dev4-docker",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "demo": "tsx src/cli.ts",
+    "live:demo": "tsx src/live-demo.ts",
+    "prepare:swebench:dev4": "python src/prepare_swebench_tasks.py --output data/swebench-lite-dev4.tasks.jsonl --workspace-root workspaces/swebench-lite-dev4 --clone",
+    "prepare:swebench:dev4:docker": "python src/prepare_swebench_tasks.py --output data/swebench-lite-dev4-docker.tasks.jsonl --workspace-root workspaces/swebench-lite-dev4-docker-placeholder --docker-backed",
+    "ui": "tsx src/harness/ui-server.ts",
+    "test": "node --import tsx --test test/**/*.test.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^1.3.22",
+    "ai": "^4.3.16",
+    "better-sqlite3": "^11.8.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}
