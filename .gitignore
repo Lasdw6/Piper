@@ -27,6 +27,7 @@ artifacts/
 
 # Task lists: large or regenerated via scripts (see README / package.json prepare:*)
 # Keep only the tiny mock demo fixture tracked.
+data/*.jsonl
 data/**/*.jsonl
 !data/sample-benchmark-tasks.jsonl
 
