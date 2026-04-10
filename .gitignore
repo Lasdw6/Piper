@@ -25,6 +25,11 @@ ENV/
 # Benchmark / run outputs
 artifacts/
 
+# Task lists: large or regenerated via scripts (see README / package.json prepare:*)
+# Keep only the tiny mock demo fixture tracked.
+data/**/*.jsonl
+!data/sample-benchmark-tasks.jsonl
+
 # Local SWE-bench checkouts (large; regenerate with prepare scripts)
 workspaces/
 
